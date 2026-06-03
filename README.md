@@ -2,11 +2,12 @@
   <img src="client/assets/icon.png" width="96" alt="Desktop Viewer"/>
   <h1>Desktop Viewer</h1>
   <p><strong>AnyDesk-style remote desktop — screen share, full remote control, file transfer</strong><br/>
-  Works on your local network. No cloud. No accounts. Just install and connect.</p>
+  Works on your local network <em>or</em> across the internet. No accounts. No cloud subscription. Just install and connect.</p>
 
   [![Release](https://img.shields.io/github/v/release/ShasidharReddy/Shasi-Desktop-viewer?style=flat-square&label=Latest%20Release&color=4f8ef7)](https://github.com/ShasidharReddy/Shasi-Desktop-viewer/releases/latest)
   [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey?style=flat-square)](https://github.com/ShasidharReddy/Shasi-Desktop-viewer/releases/latest)
   [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+  [![Build](https://img.shields.io/github/actions/workflow/status/ShasidharReddy/Shasi-Desktop-viewer/build.yml?style=flat-square&label=CI)](https://github.com/ShasidharReddy/Shasi-Desktop-viewer/actions)
 </div>
 
 ---
@@ -17,11 +18,11 @@ Go to the **[Releases page](https://github.com/ShasidharReddy/Shasi-Desktop-view
 
 | Your machine | File to download | How to install |
 |---|---|---|
-| 🍎 **macOS Apple Silicon** (M1 / M2 / M3 / M4) | `Desktop Viewer-x.x.x-arm64.dmg` | Open DMG → drag app to Applications |
-| 🍎 **macOS Intel** (2019 or older) | `Desktop Viewer-x.x.x.dmg` | Open DMG → drag app to Applications |
-| 🪟 **Windows 10 / 11** (64-bit) | `Desktop Viewer Setup x.x.x.exe` | Double-click → Next → Install |
+| 🍎 **macOS Apple Silicon** (M1 / M2 / M3 / M4) | `Desktop.Viewer-x.x.x-arm64.dmg` | Open DMG → drag app to Applications |
+| 🍎 **macOS Intel** (2019 or older) | `Desktop.Viewer-x.x.x.dmg` | Open DMG → drag app to Applications |
+| 🪟 **Windows 10 / 11** (64-bit) | `Desktop.Viewer.Setup.x.x.x.exe` | Double-click → Next → Install |
 
-> **⚠️ First-run warnings are normal** — the app is unsigned (no $99/yr Apple certificate).
+> **⚠️ First-run warnings are normal** — the app is open-source and unsigned.
 > - **macOS:** Right-click the app → **Open** → **Open Anyway**
 > - **Windows:** Click **More info** → **Run anyway**
 
@@ -34,210 +35,270 @@ Go to the **[Releases page](https://github.com/ShasidharReddy/Shasi-Desktop-view
 | 📡 **Screen Share** | Stream your full desktop to another machine over WebRTC P2P |
 | 🖱️ **Remote Control** | Viewer controls host's mouse, keyboard, scroll — full AnyDesk-style control |
 | 📁 **File Transfer** | Drag & drop files to send. Any file type, any size. Save with one click |
-| 🔒 **Private** | Direct peer-to-peer — nothing goes to any cloud server |
-| 🌐 **Cross-platform** | Mac ↔ Mac, Windows ↔ Windows, Mac ↔ Windows |
+| 🏠 **Same Network** | Zero-config mode — just share a 6-char code on the same Wi-Fi |
+| 🌐 **Cross-Region** | Internet mode — connect across cities, countries, VPNs, corporate NAT |
+| 🔒 **Private** | Direct WebRTC peer-to-peer after handshake — no data stored |
+| 🖥️ **Cross-platform** | Mac ↔ Mac, Windows ↔ Windows, Mac ↔ Windows |
 
 ---
 
-## 🚀 Quick Start (3 steps)
+## 🗺️ Choose Your Mode
 
-### Step 1 — Run the Signaling Server (once, on any machine)
+| | 🏠 Same Network | 🌐 Different Locations |
+|---|---|---|
+| **Use when** | Both machines on same Wi-Fi / LAN | Different cities, countries, or networks |
+| **Signaling server** | Run locally (takes 30 seconds) | Deploy to cloud (Render/Railway — free) |
+| **Extra setup** | None | Paste the cloud server URL in Settings |
+| **NAT traversal** | STUN (direct P2P) | TURN relay (auto-enabled) |
 
-The signaling server just coordinates the initial WebRTC handshake. Run it on **either** laptop, or any machine on the same Wi-Fi.
+---
+
+## 🏠 Mode 1: Same Network (Local LAN / Wi-Fi)
+
+Both machines must be on the **same Wi-Fi or wired network**.
+
+### Step 1 — Start the Signaling Server
+
+Run this **once**, on **either** machine:
 
 ```bash
-# First time only
 cd signaling-server
-npm install
-
-# Start the server
+npm install      # first time only
 npm start
 ```
 
-You'll see output like this:
-
+You'll see:
 ```
 === Desktop Viewer Signaling Server ===
   Local:   http://localhost:3000
-  Network: http://192.168.1.42:3000   ← note this IP
+  Network: http://192.168.1.42:3000   ← write this down
 ```
 
-> 📌 Keep this terminal open. Both laptops need to reach this IP.
+> Keep this terminal open the whole session.
 
 ---
 
-### Step 2 — Configure Both Laptops
+### Step 2 — Configure Settings on Both Machines
 
-On **both** machines:
-1. Open **Desktop Viewer**
-2. Click **⚙️ Settings** in the left sidebar
-3. Enter the server IP (e.g. `192.168.1.42`) and port `3000`
+On **both** machines, open Desktop Viewer → click **⚙️ Settings**:
+
+![Settings — Same Network mode](docs/screenshots/08-settings-local.png)
+
+1. Make sure the **🏠 Same Network** tab is selected
+2. Enter the **IP address** shown by the server (e.g. `192.168.1.42`)
+3. Enter **port** `3000`
 4. Click **💾 Save Settings**
 
+---
+
+### Step 3 — Share Your Screen (Host Machine)
+
+On the machine you want to share:
+
+**3a.** Click **📡 Share My Screen** in the sidebar
+
+![Share — idle state](docs/screenshots/01-share-idle.png)
+
+**3b.** Click **▶ Start Sharing**
+
+![Share — code generated, waiting for viewer](docs/screenshots/02-share-waiting.png)
+
+A **6-character room code** appears (e.g. `XK92AB`). Share this code with the other person.
+
+---
+
+### Step 4 — Connect from the Viewer Machine
+
+**4a.** On the other machine, click **🔗 Connect to Remote**
+
+![Connect — code entry](docs/screenshots/04-connect-idle.png)
+
+**4b.** Type the 6-character code → click **🔗 Connect**
+
+![Connect — joining in progress](docs/screenshots/05-connect-joining.png)
+
+**4c.** The host's desktop appears full-screen
+
+![Remote view — full screen with control bar](docs/screenshots/10-remote-view.png)
+
+The top bar shows:
+- **● Connected** — live status
+- **Control ⬜** — click to enable mouse + keyboard takeover
+- **📁 Files** — open file transfer side panel
+- **✖** — disconnect and return to menu
+
+---
+
+### Step 5 — Confirm Connection on Host
+
+Back on the host machine you'll see:
+
+![Share — viewer connected](docs/screenshots/03-share-connected.png)
+
+The status changes from *Waiting for viewer…* to **● Viewer Connected**.
+
+---
+
+## 🌐 Mode 2: Different Locations (Internet / Cross-Region)
+
+Use this when machines are on **different networks** — different cities, countries, behind corporate firewalls, mobile data, VPN, etc.
+
+### Step 1 — Deploy the Signaling Server to the Cloud (One-Time Setup)
+
+You need a **public URL** for the signaling server. Three free options:
+
+#### Option A — Render.com (easiest, always-on free tier)
+
+1. Fork or clone this repo to your GitHub account
+2. Go to [render.com](https://render.com) → **New Web Service**
+3. Connect your GitHub repo → select `signaling-server` as the root directory
+4. Render auto-detects `render.yaml` — just click **Create Web Service**
+5. Wait ~2 min → you get a URL like `https://your-app.onrender.com`
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+#### Option B — Railway.app (generous free tier)
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login and deploy
+railway login
+cd signaling-server
+railway up
 ```
-┌──────────────────────────────────────────┐
-│  ⚙️  Settings                             │
-│                                          │
-│  Signaling Server IP                     │
-│  ┌────────────────────┬──────┐           │
-│  │  192.168.1.42      │ 3000 │           │
-│  └────────────────────┴──────┘           │
-│                                          │
-│  [ 💾 Save Settings ]                    │
-└──────────────────────────────────────────┘
+
+Railway prints your URL: `https://your-app.up.railway.app`
+
+#### Option C — Run on any VPS / server
+
+```bash
+# On your VPS (Ubuntu/Debian)
+git clone https://github.com/ShasidharReddy/Shasi-Desktop-viewer.git
+cd Shasi-Desktop-viewer/signaling-server
+npm install
+# Run with PM2 (keeps running after SSH disconnect)
+npm install -g pm2
+pm2 start server.js --name desktop-viewer
+pm2 save
+```
+
+Open port 3000 in your firewall/security group. Your URL is `http://YOUR_VPS_IP:3000`.
+
+#### Option D — Docker
+
+```bash
+cd signaling-server
+docker build -t desktop-viewer-server .
+docker run -d -p 3000:3000 --name dv-server desktop-viewer-server
 ```
 
 ---
 
-### Step 3 — Connect
+### Step 2 — Configure Settings on Both Machines
 
-**Laptop A — Share your screen (Host):**
+On **both** machines, open Desktop Viewer → click **⚙️ Settings**:
 
-1. Click **📡 Share My Screen**
-2. Click **▶ Start Sharing**
-3. A **6-character room code** appears (e.g. `XK92AB`)
-4. Tell that code to the other person
+![Settings — Different Locations / Remote mode](docs/screenshots/09-settings-remote.png)
 
-```
-┌──────────────────────────────────────────┐
-│  📡  Share My Screen                     │
-│                                          │
-│  ┌  ─  ─  ─  ─  ─  ─  ─  ─  ─  ─  ─ ┐  │
-│     YOUR ROOM CODE                       │
-│  │                                   │  │
-│          X  K  9  2  A  B                │
-│  │                                   │  │
-│     Share this code with the viewer      │
-│  └  ─  ─  ─  ─  ─  ─  ─  ─  ─  ─  ─ ┘  │
-│                                          │
-│  Waiting for viewer…              🟡     │
-│                                          │
-│  [ ▶ Start Sharing ]  [ ■ Stop ]         │
-└──────────────────────────────────────────┘
-```
+1. Click the **🌐 Different Locations** tab
+2. Paste the full server URL (e.g. `https://your-app.onrender.com`)
+3. *(Optional)* Enter custom TURN server credentials if you have them — or leave blank to use the built-in free relay
+4. Click **💾 Save Settings**
 
-**Laptop B — View the remote screen (Viewer):**
+> **What is TURN?** For internet connections, direct P2P fails behind symmetric NAT (corporate networks, mobile). TURN relay bounces packets through a server. The app auto-uses `openrelay.metered.ca` (free) when in remote mode.
 
-1. Click **🔗 Connect to Remote**
-2. Type the 6-character code → click **🔗 Connect**
-3. Laptop A's screen appears full-screen
-4. Toggle **Control** in the top bar to take over mouse & keyboard
+---
 
-```
-┌──────────────────────────────────────────┐
-│  🔗  Connect to Remote                   │
-│                                          │
-│  Room Code                               │
-│  ┌──────────────────────────────────┐    │
-│  │        X  K  9  2  A  B          │    │
-│  └──────────────────────────────────┘    │
-│                                          │
-│  [ 🔗 Connect ]   [ ✖ Disconnect ]       │
-└──────────────────────────────────────────┘
-```
+### Step 3 — Share, Connect, Control (Same as Mode 1)
 
-**Remote screen view (after connecting):**
+Everything from Step 3 onwards is **identical** to Mode 1 — same 6-char code flow, same UI.
 
-```
-┌──────────────────────────────────────────────────────────┐
-│ 🖥 Desktop Viewer  ● Connected  [Control ⬜]  [📁 Files] [✖]│  ← top bar
-├──────────────────────────────────────────────────────────┤
-│                                                          │
-│                                                          │
-│              [ Host's desktop streams here ]             │
-│                                                          │
-│        Full screen · Mouse & keyboard when Control ON    │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
-```
+The only difference: traffic routes through the cloud signaling server + TURN relay instead of your local network.
 
 ---
 
 ## 📁 File Transfer
 
-File transfer works **once a connection is established** (either as host or viewer).
+File transfer works once a session is active (either mode).
 
-### From the Files tab (main window):
-1. Click **📁 File Transfer** in the left sidebar
-2. Drag & drop files onto the drop zone, or click to browse
-3. Click **📤 Send Files**
-4. The other person sees the file appear under **📥 Received Files** with a **💾 Save** button
+### From the Files Tab (Before Connecting)
 
-### From inside the remote screen view:
-1. Click the **📁 Files** button in the top bar
-2. A side panel slides in — drop files or click to browse
-3. Click **📤 Send** — files transfer in real time with a progress bar
+![File Transfer — no active session](docs/screenshots/06-files-no-session.png)
 
-```
-┌─────────────────────────────────────────────────────────┬──────────────┐
-│  Remote screen view                                     │ 📁 File      │
-│                                                         │  Transfer    │
-│                                                         │ ─────────── │
-│                                                         │ 📂 Drop or  │
-│       [ Host's desktop ]                                │  click...   │
-│                                                         │             │
-│                                                         │ 📎 report.pdf│
-│                                                         │    2.3 MB   │
-│                                                         │             │
-│                                                         │ ████░░ 60%  │
-│                                                         │             │
-│                                                         │ 📥 Received │
-│                                                         │ 📄 notes.txt│
-│                                                         │    [💾 Save]│
-└─────────────────────────────────────────────────────────┴──────────────┘
-```
+*File transfer is available once a connection is established.*
 
-> **Both sides can send.** Host and viewer can each drag & drop files to the other.
+### During an Active Session
+
+![File Transfer — active session with progress](docs/screenshots/07-files-active.png)
+
+1. Drag & drop files onto the drop zone, or click **📂 Drop files or click to browse**
+2. Click **📤 Send Files**
+3. Progress bar shows transfer status
+4. The other side sees the file under **📥 Received Files** with a **💾 Save** button
+
+### From Inside the Remote View
+
+1. Click **📁 Files** in the top bar → side panel slides in
+2. Drop or browse files → **📤 Send**
+3. Files transfer in real time — both host and viewer can send
 
 ---
 
-## 🔑 macOS Permissions (first run only)
+## 🔑 macOS Permissions (First Run Only)
 
-macOS requires explicit permission grants before the app can share or control:
+macOS requires explicit permission on first use:
 
-| Permission | Who needs it | Where to grant |
+| Permission | Needed by | Where to grant |
 |---|---|---|
 | **Screen Recording** | Host machine | System Settings → Privacy & Security → Screen Recording |
-| **Accessibility** | Host machine (for remote control) | System Settings → Privacy & Security → Accessibility |
+| **Accessibility** | Host machine (for remote control to work) | System Settings → Privacy & Security → Accessibility |
 
-**Desktop Viewer will guide you automatically** — a banner appears with an **Open System Settings** button when permission is needed.
-
-```
-┌────────────────────────────────────────────────────────────┐
-│  🔒  Screen Recording Permission Required                  │
-│                                                            │
-│  Enable Desktop Viewer in System Settings → Privacy →      │
-│  Screen Recording, then restart the app.                   │
-│                                                            │
-│  [ ⚙️ Open System Settings ]   [ 🔄 Restart ]              │
-└────────────────────────────────────────────────────────────┘
-```
+The app shows a prompt with an **Open System Settings** button when either permission is missing. After granting, restart Desktop Viewer.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐   WebSocket (signaling)   ┌────────────────────┐
-│  HOST laptop    │◄─────────────────────────►│  Signaling Server  │
-│  (shares screen)│                           │  Node.js + Socket.io│
-│                 │◄─────────────────────────►│  port 3000         │
-│  VIEWER laptop  │   WebSocket (signaling)   └────────────────────┘
-│  (views screen) │
-│       │         │
-│  WebRTC P2P ────┘   direct peer-to-peer after handshake
-│  - Video track  →   screen stream
-│  - Data channel →   remote control events + file transfer
-└─────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                     Same Network Mode                   │
+│                                                         │
+│  HOST ──────────── Signaling Server ──────────── VIEWER │
+│  (local)              (localhost)               (local) │
+│       └───────── WebRTC P2P (direct) ──────────┘        │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                  Internet / Remote Mode                 │
+│                                                         │
+│  HOST ───── Cloud Signaling Server (Render/Railway) ────│
+│             (WebSocket handshake only)           VIEWER │
+│                                                         │
+│  HOST ───── TURN Relay (openrelay.metered.ca) ── VIEWER │
+│             (when direct P2P fails: corporate/mobile)   │
+│                                                         │
+│  HOST ═══════════ WebRTC P2P (if STUN works) ══ VIEWER  │
+│             (direct when NAT allows it)                 │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Data flows:**
+
+```
+Screen video  →  WebRTC video track  →  Viewer display
+Mouse/keyboard events  →  WebRTC data channel  →  Signaling server  →  HOST
+File data  →  WebRTC data channel  →  chunked ArrayBuffer  →  receiver reconstructs
 ```
 
 **Components:**
 
 | Component | What it does |
 |---|---|
-| `signaling-server/server.js` | Node.js + Socket.io — relays WebRTC SDP offer/answer & ICE candidates. Also forwards remote control events. |
-| `client/main.js` | Electron main process — creates window, handles screen capture permissions, injects mouse/keyboard via `robotjs` |
-| `client/src/app.js` | All renderer logic — screen share, viewer, remote control, file transfer via WebRTC data channel |
+| `signaling-server/server.js` | Node.js + Socket.io — relays SDP offer/answer & ICE candidates; forwards remote control events |
+| `client/main.js` | Electron main process — window, screen capture permissions, mouse/keyboard injection via robotjs |
+| `client/src/app.js` | All renderer logic — screen share, viewer, remote control, file transfer, settings, ICE/TURN config |
 | `client/src/index.html` | App UI — sidebar nav with Share / Connect / Files / Settings views |
 
 ---
@@ -250,30 +311,26 @@ macOS requires explicit permission grants before the app can share or control:
 # macOS
 brew install node
 
-# Windows — download from https://nodejs.org (LTS)
+# Windows — download from https://nodejs.org (LTS, v18+)
 ```
 
-Node.js 18+ required.
-
-### Run in development
+### Run in Development
 
 ```bash
-# Terminal 1 — start signaling server
-cd signaling-server
-npm install && npm start
+# Terminal 1 — signaling server
+cd signaling-server && npm install && npm start
 
-# Terminal 2 — run Electron app
-cd client
-npm install && npm start
+# Terminal 2 — Electron app (hot reload)
+cd client && npm install && npm start
 ```
 
-### Build installers
+### Build Installers
 
 ```bash
 cd client
-npm run build:mac    # → dist/Desktop Viewer-x.x.x.dmg (Intel + ARM)
-npm run build:win    # → dist/Desktop Viewer Setup x.x.x.exe
-npm run build:all    # → both at once
+npm run build:mac    # → dist/Desktop.Viewer-x.x.x.dmg (Intel + Apple Silicon)
+npm run build:win    # → dist/Desktop.Viewer.Setup.x.x.x.exe
+npm run build:all    # → both platforms
 ```
 
 Output goes to `client/dist/`.
@@ -285,51 +342,85 @@ Output goes to `client/dist/`.
 ```
 Shasi-Desktop-viewer/
 ├── signaling-server/
-│   ├── package.json          ← Node.js dependencies
-│   └── server.js             ← Express + Socket.io signaling server
+│   ├── server.js             ← Express + Socket.io signaling server
+│   ├── package.json
+│   ├── Dockerfile            ← containerized deployment
+│   ├── render.yaml           ← Render.com one-click deploy
+│   └── railway.toml          ← Railway.app deploy config
 │
 ├── client/
-│   ├── package.json          ← electron-builder config + build scripts
-│   ├── main.js               ← Electron main: window, permissions, robotjs injection
-│   ├── preload.js            ← Context bridge: safe IPC between main ↔ renderer
+│   ├── package.json          ← electron-builder config
+│   ├── main.js               ← Electron main: window, permissions, robotjs
+│   ├── preload.js            ← Context bridge (main ↔ renderer)
 │   ├── assets/
-│   │   ├── icon.icns         ← macOS app icon
-│   │   ├── icon.ico          ← Windows app icon
-│   │   ├── icon.png          ← General icon
-│   │   └── entitlements.mac.plist
+│   │   ├── icon.icns         ← macOS app icon (512×512 multi-size)
+│   │   ├── icon.ico          ← Windows app icon (16–256px multi-size)
+│   │   └── icon.png
 │   └── src/
-│       ├── index.html        ← App layout: sidebar + Share/Connect/Files/Settings
-│       ├── app.js            ← All renderer logic (screen share + file transfer)
-│       └── style.css         ← Dark theme styles
+│       ├── index.html        ← App layout
+│       ├── app.js            ← All renderer logic
+│       └── style.css         ← Dark theme
+│
+├── docs/screenshots/         ← UI screenshots for this README
 │
 └── .github/workflows/
-    └── build.yml             ← Auto-build .dmg + .exe on git tag push
+    └── build.yml             ← CI: auto-build DMG + EXE on git tag push
 ```
 
 ---
 
 ## 🛠️ Troubleshooting
 
+### Connection Issues
+
 | Problem | Solution |
 |---|---|
-| **"Cannot connect to signaling server"** | Make sure `npm start` is running in `signaling-server/` and both laptops are on the **same Wi-Fi/LAN** |
-| **"Room not found"** | Double-check the 6-char code. Host must still be sharing (haven't clicked Stop) |
-| **Black screen on viewer** | macOS: re-grant Screen Recording in System Settings. Restart the app after granting |
-| **Remote control not working** | macOS: grant Accessibility in System Settings → Privacy. Windows: run app as Administrator |
-| **File transfer stuck / not starting** | Connection must be established first. Check the channel is open — disconnect and reconnect |
-| **Windows Defender warning** | Click **More info** → **Run anyway** (app is unsigned) |
-| **macOS Gatekeeper "unidentified developer"** | Right-click app → **Open** → **Open Anyway** |
-| **High CPU on host** | Normal during screen capture. Reduce screen resolution or close other apps |
-| **Laggy remote view** | Both machines need to be on the same LAN (not different SSIDs). Wired ethernet = best performance |
+| **"Cannot connect to signaling server"** | **Same Network:** Is `npm start` running? Are both machines on the same Wi-Fi? **Remote mode:** Is your cloud URL reachable? Try opening it in a browser — you should see `Desktop Viewer Signaling Server running` |
+| **"Room not found"** | Double-check the 6-char code. Host must still be sharing (not clicked Stop) |
+| **Connection never establishes (spinning)** | Behind symmetric NAT? Go to Settings → Different Locations mode and ensure TURN is configured. Or try a different network |
+| **Works locally, fails across internet** | Enable Remote mode with the cloud signaling URL. TURN relay will be auto-enabled |
+
+### Display Issues
+
+| Problem | Solution |
+|---|---|
+| **Black screen on viewer** | macOS host: re-grant Screen Recording in System Settings → Privacy & Security → Screen Recording. Restart app |
+| **Grey / frozen screen** | Click Stop on host, click Start again to restart the stream |
+| **Laggy/choppy video** | Check network bandwidth. Same-LAN wired ethernet = best. Reduce host screen resolution if on slow internet |
+
+### Remote Control Issues
+
+| Problem | Solution |
+|---|---|
+| **Control toggle doesn't move mouse** | macOS: grant Accessibility in System Settings → Privacy. Windows: run app as Administrator |
+| **Keyboard input not working** | Click inside the remote screen first (focus), then toggle Control on |
+| **Mouse clicks off by display scaling** | macOS: both machines should use the same display scaling (Retina/non-Retina mix can cause offset) |
+
+### File Transfer Issues
+
+| Problem | Solution |
+|---|---|
+| **Send button disabled** | Connection must be established first (viewer must have joined) |
+| **Transfer stuck at 0%** | Disconnect and reconnect — the data channel may have stalled |
+| **Large file transfer very slow** | Expected over WebRTC. Files are chunked and sent over the data channel |
+
+### Platform Issues
+
+| Problem | Solution |
+|---|---|
+| **Windows Defender warning** | Click **More info** → **Run anyway** |
+| **macOS "unidentified developer"** | Right-click app → **Open** → **Open Anyway** |
+| **macOS permission banner keeps appearing** | Grant both Screen Recording AND Accessibility, then restart |
+| **High CPU on host** | Normal during active screen capture. Minimize other apps or reduce screen resolution |
 
 ---
 
 ## ⚠️ Known Limitations
 
-- Requires both machines on the **same network** (Wi-Fi or LAN). For internet connections, a TURN server is needed.
-- **Audio is not captured** (video/screen only).
-- One viewer per session.
-- macOS requires permission grants on first use (guided by the app).
+- **Audio not captured** — video/screen only (no microphone or system audio stream)
+- **One viewer per session** — single 1:1 connection only
+- **Mobile not supported** — desktop Electron app only (macOS + Windows)
+- Free TURN relay (`openrelay.metered.ca`) may have rate limits under heavy use — use your own TURN server for production
 
 ---
 
