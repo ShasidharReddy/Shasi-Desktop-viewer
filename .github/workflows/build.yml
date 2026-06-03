@@ -1,0 +1,110 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm install
+
+      - name: Build macOS (Intel + Apple Silicon)
+        working-directory: client
+        run: npm run build:mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false   # skip code signing (unsigned build)
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-installers
+          path: |
+            client/dist/*.dmg
+          retention-days: 7
+
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm install
+
+      - name: Build Windows
+        working-directory: client
+        run: npm run build:win
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-installers
+          path: |
+            client/dist/*.exe
+          retention-days: 7
+
+  release:
+    needs: [build-mac, build-win]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-installers
+          path: dist/
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: win-installers
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Desktop Viewer ${{ github.ref_name }}"
+          body: |
+            ## 🖥️ Desktop Viewer ${{ github.ref_name }}
+
+            **Download the right installer for your OS below:**
+
+            | Platform | File |
+            |---|---|
+            | 🍎 macOS Apple Silicon (M1/M2/M3/M4) | `Desktop Viewer-*-arm64.dmg` |
+            | 🍎 macOS Intel | `Desktop Viewer-*.dmg` |
+            | 🪟 Windows 64-bit | `Desktop Viewer Setup *.exe` |
+
+            ### What's included
+            - 📡 Screen sharing (WebRTC P2P — no cloud)
+            - 🖱️ Full remote control (mouse + keyboard)
+            - 📁 File transfer (drag & drop, any size)
+            - 🔒 Works on local network — no accounts needed
+          draft: false
+          prerelease: false
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,83 +1,64 @@
 {
-  "name": "secure-system",
+  "name": "desktop-viewer",
+  "productName": "Desktop Viewer",
   "version": "1.0.0",
-  "description": "Secure System — AnyDesk-style remote desktop (Win/Mac)",
-  "author": {
-    "name": "ShasidharReddy",
-    "email": "noreply@securesystem.app"
-  },
+  "description": "Remote desktop access — connect to any laptop using a room code",
   "main": "main.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ShasidharReddy/screen-share.git"
-  },
+  "author": "ShasidharReddy",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --mac --win --publish never",
-    "build:mac": "electron-builder --mac --publish never",
-    "build:win": "electron-builder --win --publish never",
-    "build:linux": "electron-builder --linux --publish never",
-    "dist": "electron-builder --mac --win --linux --publish never"
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win"
   },
   "dependencies": {
-    "simple-peer": "^9.11.1",
+    "@jitsi/robotjs": "^0.6.22",
     "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
-    "electron": "^26.6.10",
-    "electron-builder": "^24.9.4"
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1"
   },
   "build": {
-    "appId": "com.securesystem.remotedesktop",
-    "productName": "Secure System",
-    "copyright": "Copyright © 2025 Secure System",
-    "directories": {
-      "output": "dist",
-      "buildResources": "assets"
-    },
+    "appId": "app.desktop-viewer",
+    "productName": "Desktop Viewer",
+    "directories": { "output": "dist" },
     "files": [
-      "**/*",
-      "!dist/**",
-      "!node_modules/.cache/**",
-      "!node_modules/robotjs/**"
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "node_modules/**/*",
+      "!node_modules/electron-builder/**/*"
     ],
     "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ],
       "icon": "assets/icon.icns",
       "category": "public.app-category.utilities",
-      "identity": null,
-      "hardenedRuntime": false,
-      "gatekeeperAssess": false,
-      "target": [
-        { "target": "dmg", "arch": ["arm64", "x64"] }
-      ],
-      "darkModeSupport": true
+      "hardenedRuntime": true,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
     },
     "win": {
-      "icon": "assets/icon.ico",
-      "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
-      ]
-    },
-    "linux": {
-      "icon": "assets/icon.png",
-      "target": [
-        { "target": "AppImage", "arch": ["x64"] },
-        { "target": "deb", "arch": ["x64"] }
-      ],
-      "category": "Network"
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "shortcutName": "Desktop Viewer",
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Secure System"
+      "createStartMenuShortcut": true
     },
     "dmg": {
-      "title": "Secure System Installer",
-      "background": null,
-      "window": { "width": 500, "height": 320 }
-    }
+      "title": "Desktop Viewer",
+      "window": { "width": 540, "height": 380 }
+    },
+    "npmRebuild": false
+  },
+  "optionalDependencies": {
+    "@jitsi/robotjs": "*"
   }
 }

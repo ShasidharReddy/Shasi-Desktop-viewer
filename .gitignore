@@ -1,8 +1,29 @@
+# Dependencies
 node_modules/
-dist/
-build/
-out/
+client/node_modules/
+signaling-server/node_modules/
+
+# Build output (installers committed via GitHub Releases, not git)
+client/dist/
+client/dist-temp/
+
+# Electron
+client/.webpack/
+
+# macOS
 .DS_Store
+**/.DS_Store
+
+# Logs
 *.log
-client/release/
-server/.env
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local
