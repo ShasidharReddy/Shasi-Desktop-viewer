@@ -4,9 +4,11 @@
   // ── Settings ──────────────────────────────────────────────────────────────
   const settings = {
     get serverUrl() {
-      const ip   = localStorage.getItem('sv_ip')   || 'localhost';
+      const mode = localStorage.getItem('sv_mode') || 'local';
+      if (mode === 'remote') return localStorage.getItem('sv_server_url') || '';
+      const ip   = localStorage.getItem('sv_ip')   || '';
       const port = localStorage.getItem('sv_port')  || '3000';
-      return `http://${ip}:${port}`;
+      return ip ? `http://${ip}:${port}` : '';
     }
   };
 
@@ -23,18 +25,65 @@
   });
 
   // Settings persistence
+  function setModeTab(mode) {
+    ['local', 'remote'].forEach(m => {
+      const tab = $(`tab-${m}`);
+      if (!tab) return;
+      const active = m === mode;
+      tab.style.background = active ? 'var(--accent)' : 'var(--surface2)';
+      tab.style.color      = active ? '#fff'          : 'var(--text-dim)';
+    });
+    $('local-fields').style.display  = mode === 'local'  ? '' : 'none';
+    $('remote-fields').style.display = mode === 'remote' ? '' : 'none';
+    localStorage.setItem('sv_mode', mode);
+  }
+  document.querySelectorAll('.mode-tab').forEach(btn => {
+    btn.addEventListener('click', () => setModeTab(btn.dataset.mode));
+  });
+
+  const savedMode = localStorage.getItem('sv_mode') || 'local';
+  setModeTab(savedMode);
+
   const savedIp = localStorage.getItem('sv_ip');
   const savedPort = localStorage.getItem('sv_port');
   if (savedIp)   $('server-ip').value   = savedIp;
   if (savedPort) $('server-port').value = savedPort;
 
+  const savedServerUrl = localStorage.getItem('sv_server_url');
+  if (savedServerUrl && $('server-url-full')) $('server-url-full').value = savedServerUrl;
+
+  const savedTurnUrl = localStorage.getItem('sv_turn_url');
+  if (savedTurnUrl && $('turn-url')) {
+    $('turn-url').value  = savedTurnUrl;
+    $('turn-user').value = localStorage.getItem('sv_turn_user') || '';
+    $('turn-pass').value = localStorage.getItem('sv_turn_pass') || '';
+  }
+
   $('save-settings-btn').addEventListener('click', () => {
-    const ip   = $('server-ip').value.trim();
-    const port = $('server-port').value.trim() || '3000';
-    if (!ip) { showMsg('settings-msg', 'Enter the server IP first.', 'error'); return; }
-    localStorage.setItem('sv_ip', ip);
-    localStorage.setItem('sv_port', port);
-    showMsg('settings-msg', `Saved. Server: http://${ip}:${port}`, 'success');
+    const mode = localStorage.getItem('sv_mode') || 'local';
+    if (mode === 'local') {
+      const ip   = $('server-ip').value.trim();
+      const port = $('server-port').value.trim() || '3000';
+      if (!ip) { showMsg('settings-msg', 'Enter the server IP first.', 'error'); return; }
+      localStorage.setItem('sv_ip', ip);
+      localStorage.setItem('sv_port', port);
+      showMsg('settings-msg', `✅ Saved — http://${ip}:${port}`, 'success');
+    } else {
+      const url = $('server-url-full').value.trim().replace(/\/$/, '');
+      if (!url) { showMsg('settings-msg', 'Enter the server URL first.', 'error'); return; }
+      localStorage.setItem('sv_server_url', url);
+      const turnUrl  = $('turn-url').value.trim();
+      const turnUser = $('turn-user').value.trim();
+      const turnPass = $('turn-pass').value.trim();
+      if (turnUrl) {
+        localStorage.setItem('sv_turn_url',  turnUrl);
+        localStorage.setItem('sv_turn_user', turnUser);
+        localStorage.setItem('sv_turn_pass', turnPass);
+      } else {
+        ['sv_turn_url', 'sv_turn_user', 'sv_turn_pass'].forEach(k => localStorage.removeItem(k));
+      }
+      showMsg('settings-msg', `✅ Saved — ${url}`, 'success');
+    }
   });
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -76,6 +125,32 @@
     if (['js','ts','py','go','java','c','cpp','rs','rb','sh'].includes(ext)) return '📝';
     if (['doc','docx','xls','xlsx','ppt','pptx'].includes(ext)) return '📊';
     return '📎';
+  }
+
+  // Build ICE server list — includes TURN relay for remote/internet mode
+  function getIceServers() {
+    const stun = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+    ];
+    // Custom TURN override from settings
+    const turnUrl  = localStorage.getItem('sv_turn_url');
+    const turnUser = localStorage.getItem('sv_turn_user');
+    const turnPass = localStorage.getItem('sv_turn_pass');
+    if (turnUrl) {
+      return [...stun, { urls: turnUrl, username: turnUser || '', credential: turnPass || '' }];
+    }
+    // In remote/internet mode add free public TURN relay (Open Relay by Metered.ca)
+    if ((localStorage.getItem('sv_mode') || 'local') === 'remote') {
+      return [
+        ...stun,
+        { urls: 'turn:openrelay.metered.ca:80',   username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443',  username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turns:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+      ];
+    }
+    return stun;
   }
 
   // Load socket.io from signaling server
@@ -377,8 +452,8 @@
   function hidePermBanner() { $('perm-banner').style.display = 'none'; }
 
   async function startHostSession() {
-    if (!localStorage.getItem('sv_ip')) {
-      showMsg('share-msg', 'Go to Settings and enter the server IP first.', 'error');
+    if (!settings.serverUrl) {
+      showMsg('share-msg', 'Go to ⚙️ Settings and configure the server first.', 'error');
       return;
     }
 
@@ -492,12 +567,7 @@
     }
     hostStream = stream;
 
-    hostPeer = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]
-    });
+    hostPeer = new RTCPeerConnection({ iceServers: getIceServers() });
 
     // ── File transfer data channel (host creates it) ──────────────────────
     hostFileChannel = hostPeer.createDataChannel('file-transfer', { ordered: true });
@@ -553,8 +623,8 @@
     const code = $('room-code-input').value.trim().toUpperCase();
     if (code.length !== 6) { showMsg('connect-msg', 'Enter the 6-character room code.', 'error'); return; }
 
-    if (!localStorage.getItem('sv_ip')) {
-      showMsg('connect-msg', 'Go to Settings and enter the server IP first.', 'error');
+    if (!settings.serverUrl) {
+      showMsg('connect-msg', 'Go to ⚙️ Settings and configure the server first.', 'error');
       return;
     }
 
@@ -611,12 +681,7 @@
   }
 
   async function handleViewerOffer(from, offer) {
-    viewerPeer = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]
-    });
+    viewerPeer = new RTCPeerConnection({ iceServers: getIceServers() });
 
     // ── File transfer data channel (viewer receives it) ───────────────────
     viewerPeer.ondatachannel = ({ channel }) => {

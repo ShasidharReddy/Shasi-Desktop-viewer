@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' http: ws:; script-src 'self' 'unsafe-inline' http:; style-src 'self' 'unsafe-inline'"/>
+        content="default-src 'self' http: https: ws: wss:; script-src 'self' 'unsafe-inline' http: https:; style-src 'self' 'unsafe-inline'"/>
   <title>Desktop Viewer</title>
   <link rel="stylesheet" href="style.css"/>
   <style>
@@ -200,23 +200,76 @@
       <!-- SETTINGS -->
       <div class="view" id="view-settings">
         <div class="view-title">Settings</div>
-        <div class="view-sub">Configure the signaling server. Both laptops must point to the same server.</div>
-        <div class="field">
-          <label>Signaling Server IP</label>
-          <div class="field-row">
-            <input type="text" id="server-ip" placeholder="e.g. 192.168.1.42 or localhost"/>
-            <input class="port" type="number" id="server-port" value="3000" min="1" max="65535"/>
+        <div class="view-sub">Choose how the two machines find each other.</div>
+
+        <!-- Mode tabs -->
+        <div style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0">
+          <button class="mode-tab" id="tab-local" data-mode="local"
+            style="flex:1;padding:10px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s">
+            🏠 Same Network (LAN)
+          </button>
+          <button class="mode-tab" id="tab-remote" data-mode="remote"
+            style="flex:1;padding:10px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s">
+            🌐 Different Locations (Internet)
+          </button>
+        </div>
+
+        <!-- Local mode fields -->
+        <div id="local-fields">
+          <div class="field">
+            <label>Signaling Server IP</label>
+            <div class="field-row">
+              <input type="text" id="server-ip" placeholder="e.g. 192.168.1.42 or localhost"/>
+              <input class="port" type="number" id="server-port" value="3000" min="1" max="65535"/>
+            </div>
+          </div>
+          <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:16px">
+            <strong style="color:var(--text)">How to set up:</strong><br>
+            1. Run the signaling server on any machine on your network<br>
+            2. Enter its IP address above and save<br>
+            3. Do the same on the other laptop
           </div>
         </div>
+
+        <!-- Remote / Internet mode fields -->
+        <div id="remote-fields" style="display:none">
+          <div class="field">
+            <label>Signaling Server URL</label>
+            <input type="text" id="server-url-full" placeholder="https://your-server.onrender.com"/>
+          </div>
+          <div class="field">
+            <label>TURN Server URL
+              <span style="font-weight:400;text-transform:none;letter-spacing:0"> — optional, free relay used by default</span>
+            </label>
+            <input type="text" id="turn-url" placeholder="turn:your-turn.com:3478"/>
+          </div>
+          <div class="field-row">
+            <div style="flex:1" class="field">
+              <label>TURN Username</label>
+              <input type="text" id="turn-user" placeholder="username"/>
+            </div>
+            <div style="flex:1" class="field">
+              <label>TURN Credential</label>
+              <input type="password" id="turn-pass" placeholder="••••••"/>
+            </div>
+          </div>
+          <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text-dim);line-height:1.9;margin-bottom:16px">
+            <strong style="color:var(--text)">How to set up:</strong><br>
+            1. Deploy the signaling server to the cloud (see below)<br>
+            2. Enter the server URL above on <em>both</em> machines<br>
+            3. TURN relay is pre-configured for free — only override if you have your own<br><br>
+            <strong style="color:var(--text)">Free cloud signaling (Render.com):</strong><br>
+            • Go to <strong>render.com</strong> → New → Web Service<br>
+            • Connect this GitHub repo<br>
+            • Root directory: <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px">signaling-server</code><br>
+            • Build: <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px">npm install</code>
+            &nbsp; Start: <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px">node server.js</code><br>
+            • Copy the <code style="background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px">https://…onrender.com</code> URL here
+          </div>
+        </div>
+
         <button class="btn-primary" id="save-settings-btn">💾 Save Settings</button>
         <div id="settings-msg" class="msg" style="margin-top:12px;display:none"></div>
-        <div style="margin-top:28px;padding:16px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text-dim);line-height:1.8">
-          <strong style="color:var(--text)">How to set up:</strong><br>
-          1. Run the signaling server on any machine on your network<br>
-          2. Enter its IP address above and save<br>
-          3. Do the same on the other laptop<br>
-          4. Use <em>Share My Screen</em> or <em>Connect to Remote</em>
-        </div>
       </div>
 
     </div><!-- /right-panel -->
