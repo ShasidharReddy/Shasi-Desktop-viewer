@@ -13,7 +13,7 @@ const io = new Server(server, {
 const rooms = new Map();
 
 function generateCode() {
-  return Math.random().toString(36).substr(2, 6).toUpperCase();
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
 function getLocalIPs() {
@@ -52,7 +52,11 @@ io.on('connection', (socket) => {
   });
 
   // VIEWER: join an existing room via code
-  socket.on('join-room', ({ code }, cb) => {
+  socket.on('join-room', ({ code } = {}, cb) => {
+    if (!code || typeof code !== 'string') {
+      if (typeof cb === 'function') cb({ error: 'Room code is required.' });
+      return;
+    }
     const room = rooms.get(code.toUpperCase());
     if (!room) {
       if (typeof cb === 'function') cb({ error: 'Room not found. Check the code and try again.' });
@@ -70,12 +74,14 @@ io.on('connection', (socket) => {
   });
 
   // WebRTC signaling relay (offers, answers, ICE candidates)
-  socket.on('signal', ({ to, data }) => {
+  socket.on('signal', ({ to, data } = {}) => {
+    if (!to || !data) return;
     io.to(to).emit('signal', { from: socket.id, data });
   });
 
   // Remote control events (viewer -> host)
-  socket.on('control', ({ to, event }) => {
+  socket.on('control', ({ to, event } = {}) => {
+    if (!to || !event) return;
     io.to(to).emit('control', { from: socket.id, event });
   });
 

@@ -153,6 +153,7 @@ function injectEvent({ type, x, y, button, key, modifiers = [], deltaX = 0, delt
 function mapBtn(b)  { return b === 2 ? 'right' : b === 1 ? 'middle' : 'left'; }
 function mapMod(m)  { return ({ ctrl:'control', alt:'alt', shift:'shift', meta: process.platform === 'darwin' ? 'command' : 'win' })[m] || m; }
 function mapKey(k) {
+  if (!k) return '';
   const m = {
     Enter:'enter', Backspace:'backspace', Delete:'delete', Tab:'tab',
     Escape:'escape', ' ':'space', ArrowLeft:'left', ArrowRight:'right',

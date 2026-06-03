@@ -7,9 +7,9 @@
   "author": "ShasidharReddy",
   "scripts": {
     "start": "electron .",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
-    "build:all": "electron-builder --mac --win"
+    "build:mac": "electron-builder --mac --publish never",
+    "build:win": "electron-builder --win --publish never",
+    "build:all": "electron-builder --mac --win --publish never"
   },
   "dependencies": {
     "@jitsi/robotjs": "^0.6.22",

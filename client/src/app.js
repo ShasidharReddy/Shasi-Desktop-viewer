@@ -361,6 +361,7 @@
   // ── HOST (Share My Screen) ────────────────────────────────────────────────
   let hostSocket = null;
   let hostPeer   = null;
+  let hostStream = null;
   let isSharing  = false;
 
   $('start-share-btn').addEventListener('click', startHostSession);
@@ -440,6 +441,9 @@
     });
 
     hostSocket.on('viewer-joined', async ({ viewerId }) => {
+      // Close any stale peer from a previous viewer connection
+      if (hostPeer) { hostPeer.close(); hostPeer = null; }
+      if (hostStream) { hostStream.getTracks().forEach(t => t.stop()); hostStream = null; }
       $('share-status-text').textContent = 'Viewer connected — starting stream…';
       setDot('share-dot', 'green');
       await beginScreenShare(viewerId);
@@ -448,7 +452,8 @@
     hostSocket.on('viewer-left', () => {
       $('share-status-text').textContent = 'Viewer disconnected. Waiting…';
       setDot('share-dot', 'yellow');
-      if (hostPeer) { hostPeer.close(); hostPeer = null; }
+      if (hostPeer)   { hostPeer.close(); hostPeer = null; }
+      if (hostStream) { hostStream.getTracks().forEach(t => t.stop()); hostStream = null; }
       onSessionEnded();
     });
 
@@ -485,6 +490,7 @@
       }
       return;
     }
+    hostStream = stream;
 
     hostPeer = new RTCPeerConnection({
       iceServers: [
@@ -517,6 +523,7 @@
 
   function stopHostSession() {
     if (hostPeer)   { hostPeer.close();        hostPeer   = null; }
+    if (hostStream) { hostStream.getTracks().forEach(t => t.stop()); hostStream = null; }
     if (hostSocket) { hostSocket.disconnect(); hostSocket = null; }
     isSharing = false;
     $('share-code').textContent       = '——————';
@@ -544,7 +551,7 @@
 
   async function startViewerSession() {
     const code = $('room-code-input').value.trim().toUpperCase();
-    if (code.length < 4) { showMsg('connect-msg', 'Enter a valid room code.', 'error'); return; }
+    if (code.length !== 6) { showMsg('connect-msg', 'Enter the 6-character room code.', 'error'); return; }
 
     if (!localStorage.getItem('sv_ip')) {
       showMsg('connect-msg', 'Go to Settings and enter the server IP first.', 'error');
